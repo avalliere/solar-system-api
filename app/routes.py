@@ -30,13 +30,30 @@ def handle_planets():
 
         return make_response(f"Planet {new_planet.name} successfully created", 201)
 
-@planets_bp.route("/<planet_id>", methods=["GET"])
+@planets_bp.route("/<planet_id>", methods=["GET", "PUT", "DELETE"])
 def handle_planet(planet_id):
     planet = Planet.query.get(planet_id)
+    if planet is None:
+        return make_response("Something went wrong :/ eek!", 404)
 
-    return {
-        "id": planet.id,
-        "name": planet.name,
-        "description": planet.description,
-        "fun_fact": planet.fun_fact
-    }
+    if request.method == "GET":
+        return {
+            "id": planet.id,
+            "name": planet.name,
+            "description": planet.description,
+            "fun_fact": planet.fun_fact
+        }
+    elif request.method == "PUT":
+        form_data = request.get_json()
+
+        planet.name = form_data["name"]
+        planet.description = form_data["description"]
+        planet.fun_fact = form_data["fun_fact"]
+
+        db.session.commit()
+
+        return make_response(f"Planet #{planet.id} successfully updated!!")
+    elif request.method == "DELETE":
+        db.session.delete(planet)
+        db.session.commit()
+        return make_response(f"Planet #{planet.id} successfully deleted")
